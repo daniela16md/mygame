@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header {
+            width: 100%;
+            text-align: center;
+            background-color:lightgrey;
+            color:  darkcyan;
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        footer {
+            width: 100%;
+            background-color: lightgrey;
+            text-align: center;
+            color:  darkcyan;
+            position: fixed;
+            bottom:0;
+        }
+
+        #gameCanvas {
+            background-color: lightgrey;
+            display: block;
+        }
+
+        h1 {
+            color: darkcyan;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .menu {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .menu button {
+            background-color: darkcyan;
+            color: white;
+            font-size: 16px;
+            padding: 10px;
+            border: none;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .menu button:hover {
+            background-color: #017f7f;
+        }
+
+        .difficulty-select {
+            margin-bottom: 20px;
+        }
+
+        #startButton, #restartButton {
+            font-size: 18px;
+        }
+
+        #language {
+            margin-bottom: 20px;
+        }
+
+        /* Hide restart button initially */
+        #restartButton {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="headerleft">DM</div>
+        <div id="language">
+            <label for="languageSelect">Choose language:</label>
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+            </select>
+        </div>
+    </header>
+    <h1 id="gameTitle">Snake Game</h1>
+    <div class="menu">
+        <div class="difficulty-select">
+            <label for="difficulty" id="difficultyLabel">Select Difficulty:</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        <button id="startButton">Start Game</button>
+        <button id="restartButton">Restart Game</button>
+    </div>
+    <footer> <span id="footer-text"></span></footer>
+    <canvas id="gameCanvas" width="400" height="400" style="display: none;"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const tailleBloc = 20;
+        const largeurCanvas = canvas.width;
+        const hauteurCanvas = canvas.height;
+
+        let snake = [{ x: 200, y: 200 }];
+        let direction = "RIGHT";
+        let nourriture = { x: 0, y: 0 };
+        let score = 0;
+        let jeuTerminé = false;
+        let vitesseSerpent = 150; // Default speed (easy)
+        let interval;  // Store the game loop interval
+
+        // Language texts for French and English
+        const texts = {
+            en: {
+                gameTitle: "Snake Game",
+                startButton: "Start Game",
+                difficultyLabel: "Select Difficulty:",
+                chooseLanguage: "Choose language:",
+                easy: "Easy",
+                medium: "Medium",
+                hard: "Hard",
+                gameOver: "Game Over!",
+                score: "Score: ",
+            },
+            fr: {
+                gameTitle: "Jeu Snake",
+                startButton: "Démarrer le jeu",
+                difficultyLabel: "Sélectionner la difficulté :",
+                chooseLanguage: "Choisir la langue :",
+                easy: "Facile",
+                medium: "Moyenne",
+                hard: "Difficile",
+                gameOver: "Game Over!",
+                score: "Score : ",
+            }
+        };
+
+        let currentLanguage = 'en';  // Default language
+
+        // Function to set text based on the selected language
+        function setLanguage(language) {
+            currentLanguage = language;
+
+            document.getElementById("gameTitle").textContent = texts[language].gameTitle;
+            document.getElementById("difficultyLabel").textContent = texts[language].difficultyLabel;
+            document.getElementById("startButton").textContent = texts[language].startButton;
+            document.getElementById("languageSelect").value = language;
+
+            document.getElementById("difficulty").innerHTML = `
+                <option value="easy">${texts[language].easy}</option>
+                <option value="medium">${texts[language].medium}</option>
+                <option value="hard">${texts[language].hard}</option>
+            `;
+        }
+
+        // Event listener to change language
+        document.getElementById("languageSelect").addEventListener("change", function() {
+            setLanguage(this.value);
+        });
+
+        // Function to generate random food position
+        function generateFood() {
+            nourriture.x = Math.floor(Math.random() * (largeurCanvas / tailleBloc)) * tailleBloc;
+            nourriture.y = Math.floor(Math.random() * (hauteurCanvas / tailleBloc)) * tailleBloc;
+        }
+
+        // Function to draw snake and food
+        function draw() {
+            if (jeuTerminé) {
+                ctx.fillStyle = "white";
+                ctx.font = "30px Arial";
+                ctx.fillText(texts[currentLanguage].gameOver, largeurCanvas / 4, hauteurCanvas / 2);
+                ctx.fillText(texts[currentLanguage].score + score, largeurCanvas / 4, hauteurCanvas / 2 + 40);
+                document.getElementById("restartButton").style.display = "block"; // Show restart button after game over
+                clearInterval(interval); // Stop the game loop when game is over
+                return;
+            }
+
+            ctx.clearRect(0, 0, largeurCanvas, hauteurCanvas);
+
+            // Draw round food (circle)
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(nourriture.x + tailleBloc / 2, nourriture.y + tailleBloc / 2, tailleBloc / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw snake
+            ctx.fillStyle = "darkcyan";
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillRect(snake[i].x, snake[i].y, tailleBloc, tailleBloc);
+            }
+
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText(texts[currentLanguage].score + score, 10, 30);
+        }
+
+        // Function to update snake's position
+        function update() {
+            const head = { ...snake[0] };
+
+            switch (direction) {
+                case "UP":
+                    head.y -= tailleBloc;
+                    break;
+                case "DOWN":
+                    head.y += tailleBloc;
+                    break;
+                case "LEFT":
+                    head.x -= tailleBloc;
+                    break;
+                case "RIGHT":
+                    head.x += tailleBloc;
+                    break;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === nourriture.x && head.y === nourriture.y) {
+                score++;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+
+            if (
+                head.x < 0 || head.x >= largeurCanvas ||
+                head.y < 0 || head.y >= hauteurCanvas ||
+                snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                jeuTerminé = true;
+            }
+        }
+
+        // Function to change snake direction with arrow keys
+        function changeDirection(event) {
+            if (event.key === "ArrowUp" && direction !== "DOWN") {
+                direction = "UP";
+            } else if (event.key === "ArrowDown" && direction !== "UP") {
+                direction = "DOWN";
+            } else if (event.key === "ArrowLeft" && direction !== "RIGHT") {
+                direction = "LEFT";
+            } else if (event.key === "ArrowRight" && direction !== "LEFT") {
+                direction = "RIGHT";
+            }
+        }
+
+        // Game loop function
+        function gameLoop() {
+            if (!jeuTerminé) {
+                update();
+                draw();
+            }
+        }
+
+        // Function to start the game
+        function startGame() {
+            document.querySelector(".menu").style.display = "none";
+            canvas.style.display = "block";
+            document.getElementById("restartButton").style.display = "none"; // Hide restart button at the start
+
+            const difficulty = document.getElementById("difficulty").value;
+            if (difficulty === "easy") {
+                vitesseSerpent = 150;
+            } else if (difficulty === "medium") {
+                vitesseSerpent = 100;
+            } else {
+                vitesseSerpent = 50;
+            }
+
+            snake = [{ x: 200, y: 200 }];
+            direction = "RIGHT";
+            score = 0;
+            generateFood();
+            jeuTerminé = false;
+
+            interval = setInterval(gameLoop, vitesseSerpent); // Start game loop interval
+        }
+
+        // Function to restart the game
+        function restartGame() {
+            document.querySelector(".menu").style.display = "none";
+            canvas.style.display = "block";
+            document.getElementById("restartButton").style.display = "none"; // Hide restart button
+
+            snake = [{ x: 200, y: 200 }];
+            direction = "RIGHT";
+            score = 0;
+            generateFood();
+            jeuTerminé = false;
+
+            clearInterval(interval); // Clear previous interval
+            interval = setInterval(gameLoop, vitesseSerpent); // Start new game loop interval
+        }
+
+        document.getElementById("startButton").addEventListener("click", startGame);
+        document.getElementById("restartButton").addEventListener("click", restartGame);
+        document.addEventListener("keydown", changeDirection);
+
+        setLanguage(currentLanguage);  // Set default language
+
+        const currentYear = new Date().getFullYear();
+
+// Set the footer text with the current year
+document.getElementById('footer-text').textContent = `${currentYear} © Daniela Mattl - Snake Game`;
+    </script>
+</body>
+</html>
