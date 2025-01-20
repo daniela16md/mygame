@@ -20,22 +20,22 @@
         header {
             width: 100%;
             text-align: center;
-            background-color:lightgrey;
-            color:  darkcyan;
+            background-color: lightgrey;
+            color: darkcyan;
             padding: 20px 0;
             position: fixed;
             top: 0;
             display: flex;
             justify-content: space-around;
         }
-        
+
         footer {
             width: 100%;
             background-color: lightgrey;
             text-align: center;
-            color:  darkcyan;
+            color: darkcyan;
             position: fixed;
-            bottom:0;
+            bottom: 0;
         }
 
         #gameCanvas {
@@ -80,9 +80,33 @@
             margin-bottom: 20px;
         }
 
-        /* Hide restart button initially */
         #restartButton {
             display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            position: fixed;
+            bottom: 20px;
+        }
+
+        .control-btn {
+            background-color: darkcyan;
+            color: white;
+            border: none;
+            padding: 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+        }
+
+        .control-btn:hover {
+            background-color: #017f7f;
         }
     </style>
 </head>
@@ -110,7 +134,17 @@
         <button id="startButton">Start Game</button>
         <button id="restartButton">Restart Game</button>
     </div>
-    <footer> <span id="footer-text"></span></footer>
+
+    <div class="controls">
+        <button class="control-btn" id="upButton">↑</button><br>
+        <div>
+            <button class="control-btn" id="leftButton">←</button>
+            <button class="control-btn" id="rightButton">→</button>
+        </div>
+        <button class="control-btn" id="downButton">↓</button>
+    </div>
+
+    <footer><span id="footer-text"></span></footer>
     <canvas id="gameCanvas" width="400" height="400" style="display: none;"></canvas>
 
     <script>
@@ -126,10 +160,9 @@
         let nourriture = { x: 0, y: 0 };
         let score = 0;
         let jeuTerminé = false;
-        let vitesseSerpent = 150; // Default speed (easy)
-        let interval;  // Store the game loop interval
+        let vitesseSerpent = 150; 
+        let interval; 
 
-        // Language texts for French and English
         const texts = {
             en: {
                 gameTitle: "Snake Game",
@@ -155,9 +188,8 @@
             }
         };
 
-        let currentLanguage = 'en';  // Default language
+        let currentLanguage = 'en';  
 
-        // Function to set text based on the selected language
         function setLanguage(language) {
             currentLanguage = language;
 
@@ -173,32 +205,28 @@
             `;
         }
 
-        // Event listener to change language
         document.getElementById("languageSelect").addEventListener("change", function() {
             setLanguage(this.value);
         });
 
-        // Function to generate random food position
         function generateFood() {
             nourriture.x = Math.floor(Math.random() * (largeurCanvas / tailleBloc)) * tailleBloc;
             nourriture.y = Math.floor(Math.random() * (hauteurCanvas / tailleBloc)) * tailleBloc;
         }
 
-        // Function to draw snake and food
         function draw() {
             if (jeuTerminé) {
                 ctx.fillStyle = "white";
                 ctx.font = "30px Arial";
                 ctx.fillText(texts[currentLanguage].gameOver, largeurCanvas / 4, hauteurCanvas / 2);
                 ctx.fillText(texts[currentLanguage].score + score, largeurCanvas / 4, hauteurCanvas / 2 + 40);
-                document.getElementById("restartButton").style.display = "block"; // Show restart button after game over
-                clearInterval(interval); // Stop the game loop when game is over
+                document.getElementById("restartButton").style.display = "block"; 
+                clearInterval(interval); 
                 return;
             }
 
             ctx.clearRect(0, 0, largeurCanvas, hauteurCanvas);
 
-            // Draw round food (circle)
             ctx.fillStyle = "red";
             ctx.beginPath();
             ctx.arc(nourriture.x + tailleBloc / 2, nourriture.y + tailleBloc / 2, tailleBloc / 2, 0, Math.PI * 2);
@@ -215,7 +243,6 @@
             ctx.fillText(texts[currentLanguage].score + score, 10, 30);
         }
 
-        // Function to update snake's position
         function update() {
             const head = { ...snake[0] };
 
@@ -252,20 +279,18 @@
             }
         }
 
-        // Function to change snake direction with arrow keys
         function changeDirection(event) {
-            if (event.key === "ArrowUp" && direction !== "DOWN") {
-                direction = "UP";
-            } else if (event.key === "ArrowDown" && direction !== "UP") {
-                direction = "DOWN";
-            } else if (event.key === "ArrowLeft" && direction !== "RIGHT") {
-                direction = "LEFT";
-            } else if (event.key === "ArrowRight" && direction !== "LEFT") {
-                direction = "RIGHT";
+            if (event.key === "ArrowUp" || event.target.id === "upButton") {
+                if (direction !== "DOWN") direction = "UP";
+            } else if (event.key === "ArrowDown" || event.target.id === "downButton") {
+                if (direction !== "UP") direction = "DOWN";
+            } else if (event.key === "ArrowLeft" || event.target.id === "leftButton") {
+                if (direction !== "RIGHT") direction = "LEFT";
+            } else if (event.key === "ArrowRight" || event.target.id === "rightButton") {
+                if (direction !== "LEFT") direction = "RIGHT";
             }
         }
 
-        // Game loop function
         function gameLoop() {
             if (!jeuTerminé) {
                 update();
@@ -273,11 +298,10 @@
             }
         }
 
-        // Function to start the game
         function startGame() {
             document.querySelector(".menu").style.display = "none";
             canvas.style.display = "block";
-            document.getElementById("restartButton").style.display = "none"; // Hide restart button at the start
+            document.getElementById("restartButton").style.display = "none"; 
 
             const difficulty = document.getElementById("difficulty").value;
             if (difficulty === "easy") {
@@ -294,14 +318,13 @@
             generateFood();
             jeuTerminé = false;
 
-            interval = setInterval(gameLoop, vitesseSerpent); // Start game loop interval
+            interval = setInterval(gameLoop, vitesseSerpent);
         }
 
-        // Function to restart the game
         function restartGame() {
             document.querySelector(".menu").style.display = "none";
             canvas.style.display = "block";
-            document.getElementById("restartButton").style.display = "none"; // Hide restart button
+            document.getElementById("restartButton").style.display = "none"; 
 
             snake = [{ x: 200, y: 200 }];
             direction = "RIGHT";
@@ -309,20 +332,24 @@
             generateFood();
             jeuTerminé = false;
 
-            clearInterval(interval); // Clear previous interval
-            interval = setInterval(gameLoop, vitesseSerpent); // Start new game loop interval
+            clearInterval(interval); 
+            interval = setInterval(gameLoop, vitesseSerpent); 
         }
 
         document.getElementById("startButton").addEventListener("click", startGame);
         document.getElementById("restartButton").addEventListener("click", restartGame);
         document.addEventListener("keydown", changeDirection);
 
-        setLanguage(currentLanguage);  // Set default language
+        document.getElementById("upButton").addEventListener("click", changeDirection);
+        document.getElementById("downButton").addEventListener("click", changeDirection);
+        document.getElementById("leftButton").addEventListener("click", changeDirection);
+        document.getElementById("rightButton").addEventListener("click", changeDirection);
+
+        setLanguage(currentLanguage);  
 
         const currentYear = new Date().getFullYear();
 
-// Set the footer text with the current year
-document.getElementById('footer-text').textContent = `${currentYear} © Daniela Mattl - Snake Game`;
+        document.getElementById('footer-text').textContent = `${currentYear} © Daniela Mattl - Snake Game`;
     </script>
 </body>
 </html>
