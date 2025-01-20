@@ -305,11 +305,11 @@
 
             const difficulty = document.getElementById("difficulty").value;
             if (difficulty === "easy") {
-                vitesseSerpent = 150;
+                vitesseSerpent = 250;
             } else if (difficulty === "medium") {
-                vitesseSerpent = 100;
+                vitesseSerpent = 200;
             } else {
-                vitesseSerpent = 50;
+                vitesseSerpent = 150;
             }
 
             snake = [{ x: 200, y: 200 }];
@@ -322,9 +322,9 @@
         }
 
         function restartGame() {
-            document.querySelector(".menu").style.display = "none";
+            document.querySelector(".menu").style.display = "flex";
             canvas.style.display = "block";
-            document.getElementById("restartButton").style.display = "none"; 
+            document.getElementById("restartButton").style.display = "flex"; 
 
             snake = [{ x: 200, y: 200 }];
             direction = "RIGHT";
